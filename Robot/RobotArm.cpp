@@ -59,11 +59,11 @@ Shader* FloorShader;
 
 // ObjectModel
 Model* ourObjectModel;
-const char* ourObjectPath = "../Robot/teapot.obj";
+const char* ourObjectPath = "./teapot.obj";
 
 // translate it so it's at the center of the scene
 // it's a bit too big for our scene, so scale it down
-glm::mat4 objectXform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f)), glm::vec3(0.08f, 0.08f, 0.08f));
+glm::mat4 objectXform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f)), glm::vec3(0.05f, 0.05f, 0.05f));
 
 // HOUSE KEEPING
 void initGL(GLFWwindow** window);
@@ -106,6 +106,50 @@ void myDisplay()
 	DrawObject(objectXform);
 
 	// ADD YOUR ROBOT RENDERING STUFF HERE     /////////////////////////////////////////////////////
+
+	model = glm::translate(model, glm::vec3(BaseTransX, 0.0f, BaseTransZ));
+	model = glm::rotate(model, glm::radians(BaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
+	DrawBase(model);
+
+	model = glm::scale(translate(model, glm::vec3(0.0f, 0.4f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(ShoulderAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	DrawArmSegment(model);
+
+	model = glm::scale(translate(model, glm::vec3(0.0f, 0.5f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(ElbowAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	DrawArmSegment(model);
+
+	model = glm::scale(translate(model, glm::vec3(0.0f, 0.5f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(WristAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(WristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
+	DrawWrist(model);
+
+	model = glm::scale(translate(model, glm::vec3(0.0f, 0.2f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
+	DrawFingerBase(model);
+
+	model = glm::scale(translate(model, glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(-FingerAng1*2), glm::vec3(0.0f, 0.0f, 1.0f));
+	DrawFingerBase(model);
+//DrawFingerTip(model);
+
+
+	//model = glm::rotate(model, glm::radians(ElbowAng), glm::vec3(1.0f, 0.0f, 0.0f));
+	//DrawJoint(model);
+	//model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f));
+	//model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	//DrawJoint(model);
+
+
+	//float BaseSpin = 0;        // 1
+	//float ShoulderAng = -10;   // 2
+	//float ElbowAng = -120;
+	//float WristAng = 90;       // 3
+	//float WristTwistAng = 10;
+	//float FingerAng1 = 45;     // 4
+	//float FingerAng2 = -90;
+
+
 
 
 
