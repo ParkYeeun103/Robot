@@ -127,27 +127,21 @@ void myDisplay()
 	model = glm::scale(translate(model, glm::vec3(0.0f, 0.2f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
 	model = glm::rotate(model, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerBase(model);
+	model = glm::scale(translate(model, glm::vec3(0.0f, 0.35f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
+	DrawFingerTip(model);
 
-	model = glm::scale(translate(model, glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
-	model = glm::rotate(model, glm::radians(-FingerAng1*2), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(-FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::scale(translate(model, glm::vec3(0.0f, -0.35f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(-FingerAng1 * 2), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerBase(model);
-//DrawFingerTip(model);
+	model = glm::scale(translate(model, glm::vec3(0.0f, 0.35f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(-FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
+	DrawFingerTip(model);
 
 
-	//model = glm::rotate(model, glm::radians(ElbowAng), glm::vec3(1.0f, 0.0f, 0.0f));
-	//DrawJoint(model);
-	//model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f));
-	//model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	//DrawJoint(model);
 
 
-	//float BaseSpin = 0;        // 1
-	//float ShoulderAng = -10;   // 2
-	//float ElbowAng = -120;
-	//float WristAng = 90;       // 3
-	//float WristTwistAng = 10;
-	//float FingerAng1 = 45;     // 4
-	//float FingerAng2 = -90;
 
 
 
