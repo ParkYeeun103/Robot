@@ -35,6 +35,7 @@ GLfloat FingerJoints[] = { 0.5f, 0.5f, 0.5f };
 // USER INTERFACE GLOBALS
 int LeftButtonDown = 0;    // MOUSE STUFF
 int RobotControl = 0;
+int RobotGrip = 0;
 
 // settings
 const unsigned int SCR_WIDTH = 768;
@@ -63,7 +64,7 @@ const char* ourObjectPath = "./teapot.obj";
 
 // translate it so it's at the center of the scene
 // it's a bit too big for our scene, so scale it down
-glm::mat4 objectXform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f)), glm::vec3(0.05f, 0.05f, 0.05f));
+glm::mat4 objectXform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.5f)), glm::vec3(0.05f, 0.05f, 0.05f));
 
 // HOUSE KEEPING
 void initGL(GLFWwindow** window);
@@ -78,6 +79,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void processInput(GLFWwindow* window, int key, int scancode, int action, int mods);
 
+
 // DRAWING ROBOT PARTS
 void DrawGroundPlane(glm::mat4 model);
 void DrawJoint(glm::mat4 model);
@@ -90,7 +92,7 @@ void DrawFingerTip(glm::mat4 model);
 void DrawObject(glm::mat4 model);
 bool hasTextures = false; 
 
-void myDisplay()
+void myDisplay(GLFWwindow* window)
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -111,33 +113,44 @@ void myDisplay()
 	model = glm::rotate(model, glm::radians(BaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
 	DrawBase(model);
 
-	model = glm::scale(translate(model, glm::vec3(0.0f, 0.4f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.4f, 0.0f));
 	model = glm::rotate(model, glm::radians(ShoulderAng), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawArmSegment(model);
 
-	model = glm::scale(translate(model, glm::vec3(0.0f, 0.5f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f));
 	model = glm::rotate(model, glm::radians(ElbowAng), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawArmSegment(model);
 
-	model = glm::scale(translate(model, glm::vec3(0.0f, 0.5f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f));
 	model = glm::rotate(model, glm::radians(WristAng), glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::rotate(model, glm::radians(WristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
 	DrawWrist(model);
 
-	model = glm::scale(translate(model, glm::vec3(0.0f, 0.2f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		if (true)
+		{
+
+		}
+	}
+
+	model = glm::translate(model, glm::vec3(0.0f, 0.2f, 0.0f));
 	model = glm::rotate(model, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerBase(model);
-	model = glm::scale(translate(model, glm::vec3(0.0f, 0.35f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+
+	model = glm::translate(model, glm::vec3(0.0f, 0.35f, 0.0f));
 	model = glm::rotate(model, glm::radians(FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerTip(model);
 
 	model = glm::rotate(model, glm::radians(-FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
-	model = glm::scale(translate(model, glm::vec3(0.0f, -0.35f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+	model = glm::translate(model, glm::vec3(0.0f, -0.35f, 0.0f));
 	model = glm::rotate(model, glm::radians(-FingerAng1 * 2), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerBase(model);
-	model = glm::scale(translate(model, glm::vec3(0.0f, 0.35f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+
+	model = glm::translate(model, glm::vec3(0.0f, 0.35f, 0.0f));
 	model = glm::rotate(model, glm::radians(-FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerTip(model);
+
 
 
 
@@ -185,7 +198,8 @@ int main()
 		FloorShader->setVec3("lightPos", camera.Position);
 
 		// render
-		myDisplay();
+		myDisplay(window);
+
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(window);
@@ -269,6 +283,7 @@ void processInput(GLFWwindow* window, int key, int scancode, int action, int mod
 	else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 }
+
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
