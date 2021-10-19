@@ -13,7 +13,6 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
 // ROBOT ARM CONTROLS
 float BaseTransX = -0.5f;  // 0
 float BaseTransZ = 0;
@@ -64,7 +63,7 @@ const char* ourObjectPath = "./teapot.obj";
 
 // translate it so it's at the center of the scene
 // it's a bit too big for our scene, so scale it down
-glm::mat4 objectXform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.5f)), glm::vec3(0.05f, 0.05f, 0.05f));
+glm::mat4 objectXform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(0.08f, 0.08f, 0.08f));
 
 // HOUSE KEEPING
 void initGL(GLFWwindow** window);
@@ -92,6 +91,7 @@ void DrawFingerTip(glm::mat4 model);
 void DrawObject(glm::mat4 model);
 bool hasTextures = false; 
 
+
 void myDisplay(GLFWwindow* window)
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -108,7 +108,6 @@ void myDisplay(GLFWwindow* window)
 	DrawObject(objectXform);
 
 	// ADD YOUR ROBOT RENDERING STUFF HERE     /////////////////////////////////////////////////////
-
 	model = glm::translate(model, glm::vec3(BaseTransX, 0.0f, BaseTransZ));
 	model = glm::rotate(model, glm::radians(BaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
 	DrawBase(model);
@@ -124,15 +123,52 @@ void myDisplay(GLFWwindow* window)
 	model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f));
 	model = glm::rotate(model, glm::radians(WristAng), glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::rotate(model, glm::radians(WristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
-	DrawWrist(model);
 
+	bool activateParent = 0;
+	float teapotAng = 0;
+	DrawWrist(model);
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
-		if (true)
+		activateParent = true;
+		//if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		//{
+		//	activateParent = false;
+		//	break;
+		//}
+
+
+		if (activateParent == true && LeftButtonDown)
 		{
 
+			glm::vec3 b = glm::vec3(model[0][0], model[1][1], model[2][2]);
+			glm::vec3 c = glm::vec3(objectXform[0][0], objectXform[1][1], objectXform[2][2]);
+			objectXform = glm::translate(objectXform*model, glm::vec3(0.0f, 0.5f, 0.0f));
+			objectXform = glm::rotate(objectXform*model, glm::radians(WristAng), glm::vec3(0.0f, 0.0f, 1.0f));
+			objectXform = glm::rotate(objectXform*model, glm::radians(WristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
+			glm::vec3 pivot = glm::vec3(objectXform[0][0], objectXform[1][1], objectXform[2][2]);
+			glm::vec3 pivot2 = glm::vec3(objectXform[0][0], objectXform[1][1], 0.0f);
+			
+			//objectXform = glm::translate(a, -pivot2+pivot);
+
+			objectXform = glm::scale(objectXform, glm::vec3(0.08f, 0.08f, 0.08f));
+
+
+
+
 		}
+
+
 	}
+	
+		model = glm::translate(model, glm::vec3(0.0f, 0.2f, 0.0f));
+		model = glm::rotate(model, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
+		DrawFingerBase(model);
+		glad_glPushMatrix;
+			model = glm::translate(model, glm::vec3(0.0f, 0.35f, 0.0f));
+			model = glm::rotate(model, glm::radians(FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
+			DrawFingerTip(model);
+		glad_glPopMatrix;
+	glad_glPopMatrix;
 
 	model = glm::translate(model, glm::vec3(0.0f, 0.2f, 0.0f));
 	model = glm::rotate(model, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -142,14 +178,6 @@ void myDisplay(GLFWwindow* window)
 	model = glm::rotate(model, glm::radians(FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerTip(model);
 
-	model = glm::rotate(model, glm::radians(-FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
-	model = glm::translate(model, glm::vec3(0.0f, -0.35f, 0.0f));
-	model = glm::rotate(model, glm::radians(-FingerAng1 * 2), glm::vec3(0.0f, 0.0f, 1.0f));
-	DrawFingerBase(model);
-
-	model = glm::translate(model, glm::vec3(0.0f, 0.35f, 0.0f));
-	model = glm::rotate(model, glm::radians(-FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
-	DrawFingerTip(model);
 
 
 
@@ -279,7 +307,9 @@ void processInput(GLFWwindow* window, int key, int scancode, int action, int mod
 {
 
 	if (key >= GLFW_KEY_1 && key <= GLFW_KEY_5 && action == GLFW_PRESS)
+	{
 		RobotControl = key - GLFW_KEY_1;
+	}
 	else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 }
