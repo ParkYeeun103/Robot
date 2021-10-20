@@ -71,8 +71,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\parkaeon\source\repos\Robot\Libraries\include;C:\Users\GLAB\source\repos\Robot\Libraries\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\parkaeon\source\repos\Robot\Libraries\lib;C:\Users\GLAB\source\repos\Robot\Libraries\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\yeaja\source\repos\Robot\Libraries\include;C:\Users\parkaeon\source\repos\Robot\Libraries\include;C:\Users\GLAB\source\repos\Robot\Libraries\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\yeaja\source\repos\Robot\Libraries\lib;C:\Users\parkaeon\source\repos\Robot\Libraries\lib;C:\Users\GLAB\source\repos\Robot\Libraries\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -81,8 +81,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\parkaeon\source\repos\Robot\Libraries\include;C:\Users\GLAB\source\repos\Robot\Libraries\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\parkaeon\source\repos\Robot\Libraries\lib;C:\Users\GLAB\source\repos\Robot\Libraries\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\yeaja\source\repos\Robot\Libraries\include;C:\Users\parkaeon\source\repos\Robot\Libraries\include;C:\Users\GLAB\source\repos\Robot\Libraries\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\yeaja\source\repos\Robot\Libraries\lib;C:\Users\parkaeon\source\repos\Robot\Libraries\lib;C:\Users\GLAB\source\repos\Robot\Libraries\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>

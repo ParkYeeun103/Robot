@@ -23,6 +23,14 @@ float WristAng = 90;       // 3
 float WristTwistAng = 10;
 float FingerAng1 = 45;     // 4
 float FingerAng2 = -90;
+float objectBaseTransX = 0.0f;  // 0
+float objectBaseTransZ = 0.0f;
+float objectBaseSpin = 0.0f;        // 1
+float objectShoulderAng = 0.0f;   // 2
+float objectElbowAng = 0.0f;
+float objectWristAng = 0.0f;       // 3
+float objectWristTwistAng = 0.0f;
+
 
 // ROBOT COLORS
 GLfloat Ground[] = { 0.5f, 0.5f, 0.5f };
@@ -34,7 +42,8 @@ GLfloat FingerJoints[] = { 0.5f, 0.5f, 0.5f };
 // USER INTERFACE GLOBALS
 int LeftButtonDown = 0;    // MOUSE STUFF
 int RobotControl = 0;
-int RobotGrip = 0;
+int objectControl = 0;
+
 
 // settings
 const unsigned int SCR_WIDTH = 768;
@@ -63,7 +72,7 @@ const char* ourObjectPath = "./teapot.obj";
 
 // translate it so it's at the center of the scene
 // it's a bit too big for our scene, so scale it down
-glm::mat4 objectXform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(0.08f, 0.08f, 0.08f));
+glm::mat4 objectXform = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f)), glm::vec3(0.08f, 0.08f, 0.08f));
 
 // HOUSE KEEPING
 void initGL(GLFWwindow** window);
@@ -78,7 +87,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void processInput(GLFWwindow* window, int key, int scancode, int action, int mods);
 
-
 // DRAWING ROBOT PARTS
 void DrawGroundPlane(glm::mat4 model);
 void DrawJoint(glm::mat4 model);
@@ -90,9 +98,9 @@ void DrawFingerTip(glm::mat4 model);
 
 void DrawObject(glm::mat4 model);
 bool hasTextures = false; 
+bool activateParent = false;
 
-
-void myDisplay(GLFWwindow* window)
+void myDisplay()
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -102,91 +110,69 @@ void myDisplay(GLFWwindow* window)
 
 	//Ground
 	glm::mat4 model = glm::mat4(1.0f); // initialize matrix to identity matrix first
-
 	DrawGroundPlane(model);
-
 	DrawObject(objectXform);
 
+
 	// ADD YOUR ROBOT RENDERING STUFF HERE     /////////////////////////////////////////////////////
+
+	//Base
 	model = glm::translate(model, glm::vec3(BaseTransX, 0.0f, BaseTransZ));
 	model = glm::rotate(model, glm::radians(BaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
 	DrawBase(model);
 
+	//Shoulder
 	model = glm::translate(model, glm::vec3(0.0f, 0.4f, 0.0f));
 	model = glm::rotate(model, glm::radians(ShoulderAng), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawArmSegment(model);
 
+	//Elbow
 	model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f));
 	model = glm::rotate(model, glm::radians(ElbowAng), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawArmSegment(model);
 
+	//Wrist
 	model = glm::translate(model, glm::vec3(0.0f, 0.5f, 0.0f));
 	model = glm::rotate(model, glm::radians(WristAng), glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::rotate(model, glm::radians(WristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
-
-	bool activateParent = 0;
-	float teapotAng = 0;
 	DrawWrist(model);
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-	{
-		activateParent = true;
-		//if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		//{
-		//	activateParent = false;
-		//	break;
-		//}
-
-
-		if (activateParent == true && LeftButtonDown)
-		{
-
-			glm::vec3 b = glm::vec3(model[0][0], model[1][1], model[2][2]);
-			glm::vec3 c = glm::vec3(objectXform[0][0], objectXform[1][1], objectXform[2][2]);
-			objectXform = glm::translate(objectXform*model, glm::vec3(0.0f, 0.5f, 0.0f));
-			objectXform = glm::rotate(objectXform*model, glm::radians(WristAng), glm::vec3(0.0f, 0.0f, 1.0f));
-			objectXform = glm::rotate(objectXform*model, glm::radians(WristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
-			glm::vec3 pivot = glm::vec3(objectXform[0][0], objectXform[1][1], objectXform[2][2]);
-			glm::vec3 pivot2 = glm::vec3(objectXform[0][0], objectXform[1][1], 0.0f);
-			
-			//objectXform = glm::translate(a, -pivot2+pivot);
-
-			objectXform = glm::scale(objectXform, glm::vec3(0.08f, 0.08f, 0.08f));
-
-
-
-
-		}
-
-
-	}
 	
-		model = glm::translate(model, glm::vec3(0.0f, 0.2f, 0.0f));
-		model = glm::rotate(model, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
-		DrawFingerBase(model);
-		glad_glPushMatrix;
-			model = glm::translate(model, glm::vec3(0.0f, 0.35f, 0.0f));
-			model = glm::rotate(model, glm::radians(FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
-			DrawFingerTip(model);
-		glad_glPopMatrix;
-	glad_glPopMatrix;
-
+	//Left finger base
+	glm::mat4 leftFinger = model;
+	leftFinger = glm::translate(leftFinger, glm::vec3(0.0f, 0.2f, 0.0f));
+	leftFinger = glm::rotate(leftFinger, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
+	DrawFingerBase(leftFinger);
+	
+	//Left finger tip
+	leftFinger = glm::translate(leftFinger, glm::vec3(0.0f, 0.35f, 0.0f));
+	leftFinger = glm::rotate(leftFinger, glm::radians(FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
+	DrawFingerTip(leftFinger);
+	
+	//Right finger base
 	model = glm::translate(model, glm::vec3(0.0f, 0.2f, 0.0f));
-	model = glm::rotate(model, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(-FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerBase(model);
 
+	//Right finger tip
 	model = glm::translate(model, glm::vec3(0.0f, 0.35f, 0.0f));
-	model = glm::rotate(model, glm::radians(FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
+	model = glm::rotate(model, glm::radians(-FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerTip(model);
 
-
-
-
-
-
-
-
-
-
+	//Pressing the space bar causes the object to constrain the wrist of the robot arm. 
+	//Pressing the space bar one more time, the constrain will be released.
+	//(It is simmilar to the constraint - parent function in maya rigging tool)
+	objectXform = glm::mat4(1.0f);
+	objectXform = glm::translate(objectXform, glm::vec3(objectBaseTransX, 0.0f, objectBaseTransZ));
+	objectXform = glm::rotate(objectXform, glm::radians(objectBaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(0.0f, 0.4f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(objectShoulderAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(0.0f, 0.5f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(objectElbowAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(0.0f, 0.5f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(objectWristAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(objectWristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(0.5f, -1.4f, 0.0f));
+	objectXform = glm::scale(objectXform, glm::vec3(0.08f, 0.08f, 0.08f));
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +188,6 @@ int main()
 	createGLPrimitives();
 
 	glEnable(GL_DEPTH_TEST);
-
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window))
@@ -226,7 +211,7 @@ int main()
 		FloorShader->setVec3("lightPos", camera.Position);
 
 		// render
-		myDisplay(window);
+		myDisplay();
 
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -310,6 +295,10 @@ void processInput(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		RobotControl = key - GLFW_KEY_1;
 	}
+	else if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+		if (activateParent == false) activateParent = true;
+		else activateParent = false;
+	}
 	else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 }
@@ -352,6 +341,16 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		case 4: FingerAng1 += yoffset  * 90; FingerAng2 += xoffset * 180; break;
 		}
 	} 
+	if (LeftButtonDown && activateParent == true)
+	{
+		switch (RobotControl)
+		{
+		case 0: objectBaseTransX += xoffset; objectBaseTransZ -= yoffset; break;
+		case 1: objectBaseSpin += xoffset * 180; break;
+		case 2: objectShoulderAng += yoffset * -90; objectElbowAng += xoffset * 90; break;
+		case 3: objectWristAng += yoffset * -180; objectWristTwistAng += xoffset * 180; break;
+		}
+	}
 	
 }
 
