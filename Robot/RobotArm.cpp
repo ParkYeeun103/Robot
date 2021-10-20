@@ -1,3 +1,11 @@
+/*
+Park Yeaeun	/ 1612111 / Department of Ceramic Arts
+
+
+I finished extra credit part
+
+*/
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -160,7 +168,6 @@ void myDisplay()
 
 	//Pressing the space bar causes the object to constrain the wrist of the robot arm. 
 	//Pressing the space bar one more time, the constrain will be released.
-	//(It was simmilar to the constraint - parent function in maya rigging tool!)
 	objectXform = glm::mat4(1.0f);
 	objectXform = glm::translate(objectXform, glm::vec3(objectBaseTransX, 0.0f, objectBaseTransZ));
 	objectXform = glm::rotate(objectXform, glm::radians(objectBaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
