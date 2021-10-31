@@ -1,9 +1,6 @@
 /*
 Park Yeaeun	/ 1612111 / Department of Ceramic Arts
 
-
-I finished extra credit part
-
 */
 
 #include <glad/glad.h>
@@ -31,6 +28,7 @@ float WristAng = 90;       // 3
 float WristTwistAng = 10;
 float FingerAng1 = 45;     // 4
 float FingerAng2 = -90;
+
 float objectBaseTransX = 0.0f;  // 0
 float objectBaseTransZ = 0.0f;
 float objectBaseSpin = 0.0f;        // 1
@@ -39,6 +37,13 @@ float objectElbowAng = 0.0f;
 float objectWristAng = 0.0f;       // 3
 float objectWristTwistAng = 0.0f;
 
+float BaseTransX2 = BaseTransX;  // 0
+float BaseTransZ2 = BaseTransZ;
+float BaseSpin2 = BaseSpin;
+float ShoulderAng2 = ShoulderAng;   // 2
+float ElbowAng2 = ElbowAng;
+float WristAng2 = WristAng;       // 3
+float WristTwistAng2 = WristTwistAng;
 
 // ROBOT COLORS
 GLfloat Ground[] = { 0.5f, 0.5f, 0.5f };
@@ -49,8 +54,8 @@ GLfloat FingerJoints[] = { 0.5f, 0.5f, 0.5f };
 
 // USER INTERFACE GLOBALS
 int LeftButtonDown = 0;    // MOUSE STUFF
+int RightButtonDown = 0;
 int RobotControl = 0;
-int objectControl = 0;
 
 
 // settings
@@ -58,7 +63,9 @@ const unsigned int SCR_WIDTH = 768;
 const unsigned int SCR_HEIGHT = 768;
 
 // camera
-Camera camera(glm::vec3(0.0f, 1.5f, 2.5f), glm::vec3(0.0f, 1.0f, 0.0f), -90.f, -15.0f);
+Camera camera(glm::vec3(0.0f, 1.0f, 3.0f));
+
+//Camera camera(glm::vec3(0.0f, 1.5f, 2.5f), glm::vec3(0.0f, 1.0f, 0.0f), -90.f, -15.0f);
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -73,6 +80,7 @@ glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 // shader
 Shader* PhongShader;
 Shader* FloorShader;
+//Shader ourShader("7.4.camera.vs", "7.4.camera.fs");
 
 // ObjectModel
 Model* ourObjectModel;
@@ -94,6 +102,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void processInput(GLFWwindow* window, int key, int scancode, int action, int mods);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 // DRAWING ROBOT PARTS
 void DrawGroundPlane(glm::mat4 model);
@@ -169,16 +178,32 @@ void myDisplay()
 	//Pressing the space bar causes the object to constrain the wrist of the robot arm. 
 	//Pressing the space bar one more time, the constrain will be released.
 	objectXform = glm::mat4(1.0f);
-	objectXform = glm::translate(objectXform, glm::vec3(objectBaseTransX, 0.0f, objectBaseTransZ));
-	objectXform = glm::rotate(objectXform, glm::radians(objectBaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(BaseTransX2, 0.0f, BaseTransZ2));
+	objectXform = glm::rotate(objectXform, glm::radians(BaseSpin2), glm::vec3(0.0f, 1.0f, 0.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(-BaseTransX2, 0.0f, -BaseTransZ2));
+
 	objectXform = glm::translate(objectXform, glm::vec3(0.0f, 0.4f, 0.0f));
-	objectXform = glm::rotate(objectXform, glm::radians(objectShoulderAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(BaseTransX2, 0.0f, BaseTransZ2));
+	objectXform = glm::rotate(objectXform, glm::radians(ShoulderAng2), glm::vec3(0.0f, 0.0f, 1.0f));
 	objectXform = glm::translate(objectXform, glm::vec3(0.0f, 0.5f, 0.0f));
-	objectXform = glm::rotate(objectXform, glm::radians(objectElbowAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(ElbowAng2), glm::vec3(0.0f, 0.0f, 1.0f));
 	objectXform = glm::translate(objectXform, glm::vec3(0.0f, 0.5f, 0.0f));
-	objectXform = glm::rotate(objectXform, glm::radians(objectWristAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(WristAng2), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(WristTwistAng2), glm::vec3(0.0f, 1.0f, 0.0f));
 	objectXform = glm::rotate(objectXform, glm::radians(objectWristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
-	objectXform = glm::translate(objectXform, glm::vec3(0.5f, -1.4f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(WristTwistAng2), glm::vec3(0.0f, -1.0f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(objectWristAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(WristAng2), glm::vec3(0.0f, 0.0f, -1.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(0.0f, -0.5f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(objectElbowAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(ElbowAng2), glm::vec3(0.0f, 0.0f, -1.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(0.0f, -0.5f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(objectShoulderAng), glm::vec3(0.0f, 0.0f, 1.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(ShoulderAng2), glm::vec3(0.0f, 0.0f, -1.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(0.0f, -0.4f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(BaseSpin2), glm::vec3(0.0f, -1.0f, 0.0f));
+	objectXform = glm::rotate(objectXform, glm::radians(objectBaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
+	objectXform = glm::translate(objectXform, glm::vec3(objectBaseTransX -BaseTransX2 + 0.5f, 0.0f, objectBaseTransZ -BaseTransZ2));
 	objectXform = glm::scale(objectXform, glm::vec3(0.08f, 0.08f, 0.08f));
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,6 +222,7 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 	// render loop
 	// -----------
+	
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
@@ -217,9 +243,11 @@ int main()
 		FloorShader->setVec3("viewPos", camera.Position);
 		FloorShader->setVec3("lightPos", camera.Position);
 
+		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+		glm::mat4 view = camera.GetViewMatrix();
+
 		// render
 		myDisplay();
-
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(window);
@@ -263,6 +291,7 @@ void initGL(GLFWwindow** window)
 	glfwSetFramebufferSizeCallback(*window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(*window, mouse_callback);
 	glfwSetMouseButtonCallback(*window, mouse_button_callback);
+	glfwSetScrollCallback(*window, scroll_callback);
 	glfwSetKeyCallback(*window, processInput);
 
 	// glad: load all OpenGL function pointers
@@ -306,6 +335,16 @@ void processInput(GLFWwindow* window, int key, int scancode, int action, int mod
 		if (activateParent == false) activateParent = true;
 		else activateParent = false;
 	}
+	float cameraSpeed = 2.5f * deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.ProcessKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.ProcessKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.ProcessKeyboard(RIGHT, deltaTime);
+
 	else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 }
@@ -336,7 +375,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 	lastX = (float) xpos;
 	lastY = (float) ypos;
-
+	if (RightButtonDown)
+	{
+		camera.ProcessMouseMovement(xoffset*200, yoffset*200);
+	}
 	if (LeftButtonDown)
 	{
 		switch (RobotControl)
@@ -352,13 +394,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	{
 		switch (RobotControl)
 		{
-		case 0: objectBaseTransX += xoffset; objectBaseTransZ -= yoffset; break;
-		case 1: objectBaseSpin += xoffset * 180; break;
-		case 2: objectShoulderAng += yoffset * -90; objectElbowAng += xoffset * 90; break;
-		case 3: objectWristAng += yoffset * -180; objectWristTwistAng += xoffset * 180; break;
+		case 0: objectBaseTransX += xoffset; objectBaseTransZ -= yoffset; BaseTransX2 = BaseTransX; BaseTransZ2 = BaseTransZ; break;
+		case 1: objectBaseSpin += xoffset * 180;  BaseSpin2 = BaseSpin; break;
+		case 2: objectShoulderAng += yoffset * -90; objectElbowAng += xoffset * 90; ShoulderAng2 = ShoulderAng; ElbowAng2 = ElbowAng; break;
+		case 3: objectWristAng += yoffset * -180; objectWristTwistAng += xoffset * 180; WristAng2 = WristAng; WristTwistAng2 = WristTwistAng; break;
 		}
 	}
-	
+
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
@@ -371,6 +413,19 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	{
 		LeftButtonDown = 0;
 	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		RightButtonDown = 1;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+	{
+		RightButtonDown = 0;
+	}
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll(yoffset);
 }
 
 class Primitive {
@@ -876,3 +931,4 @@ Cylinder::Cylinder(float bottomRadius, float topRadius, int NumSegs)
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 }
+
