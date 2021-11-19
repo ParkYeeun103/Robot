@@ -15,16 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="model_loading.fs">
+    <None Include="light_casters.vs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="model_loading.vs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="advanced_lighting.fs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="advanced_lighting.vs">
+    <None Include="light_casters.fs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

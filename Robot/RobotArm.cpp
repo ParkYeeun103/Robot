@@ -46,7 +46,7 @@ float WristAng2 = WristAng;       // 3
 float WristTwistAng2 = WristTwistAng;
 
 // ROBOT COLORS
-GLfloat Ground[] = { 0.5f, 0.5f, 0.5f };
+GLfloat Ground[] = { 1.2f, 0.95f, 0.8f };
 GLfloat Arms[] = { 0.5f, 0.5f, 0.5f };
 GLfloat Joints[] = { 0.0f, 0.27f, 0.47f };
 GLfloat Fingers[] = { 0.59f, 0.0f, 0.09f };
@@ -75,11 +75,9 @@ float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
 // light information
-glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-
+glm::vec3 lightColor = glm::vec3(0.48f, 0.68f, 1.0f);
 // shader
-Shader* PhongShader;
-Shader* FloorShader;
+Shader* lightingShader;
 //Shader ourShader("7.4.camera.vs", "7.4.camera.fs");
 
 // ObjectModel
@@ -114,14 +112,15 @@ void DrawFingerBase(glm::mat4 model);
 void DrawFingerTip(glm::mat4 model);
 
 void DrawObject(glm::mat4 model);
-bool hasTextures = false; 
+bool hasTextures = false;
 bool activateParent = false;
+bool activateSpotLight = false;
 
 void myDisplay()
 {
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -129,7 +128,6 @@ void myDisplay()
 	glm::mat4 model = glm::mat4(1.0f); // initialize matrix to identity matrix first
 	DrawGroundPlane(model);
 	DrawObject(objectXform);
-
 
 	// ADD YOUR ROBOT RENDERING STUFF HERE     /////////////////////////////////////////////////////
 
@@ -153,18 +151,18 @@ void myDisplay()
 	model = glm::rotate(model, glm::radians(WristAng), glm::vec3(0.0f, 0.0f, 1.0f));
 	model = glm::rotate(model, glm::radians(WristTwistAng), glm::vec3(0.0f, 1.0f, 0.0f));
 	DrawWrist(model);
-	
+
 	//Left finger base
 	glm::mat4 leftFinger = model;
 	leftFinger = glm::translate(leftFinger, glm::vec3(0.0f, 0.2f, 0.0f));
 	leftFinger = glm::rotate(leftFinger, glm::radians(FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerBase(leftFinger);
-	
+
 	//Left finger tip
 	leftFinger = glm::translate(leftFinger, glm::vec3(0.0f, 0.35f, 0.0f));
 	leftFinger = glm::rotate(leftFinger, glm::radians(FingerAng2), glm::vec3(0.0f, 0.0f, 1.0f));
 	DrawFingerTip(leftFinger);
-	
+
 	//Right finger base
 	model = glm::translate(model, glm::vec3(0.0f, 0.2f, 0.0f));
 	model = glm::rotate(model, glm::radians(-FingerAng1), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -203,7 +201,7 @@ void myDisplay()
 	objectXform = glm::translate(objectXform, glm::vec3(0.0f, -0.4f, 0.0f));
 	objectXform = glm::rotate(objectXform, glm::radians(BaseSpin2), glm::vec3(0.0f, -1.0f, 0.0f));
 	objectXform = glm::rotate(objectXform, glm::radians(objectBaseSpin), glm::vec3(0.0f, 1.0f, 0.0f));
-	objectXform = glm::translate(objectXform, glm::vec3(objectBaseTransX -BaseTransX2 + 0.5f, 0.0f, objectBaseTransZ -BaseTransZ2));
+	objectXform = glm::translate(objectXform, glm::vec3(objectBaseTransX - BaseTransX2 + 0.5f, 0.0f, objectBaseTransZ - BaseTransZ2));
 	objectXform = glm::scale(objectXform, glm::vec3(0.08f, 0.08f, 0.08f));
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -222,29 +220,45 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 	// render loop
 	// -----------
-	
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+		// light properties
+		lightingShader->use();
+		lightingShader->setVec3("light.position", camera.Position);
+		lightingShader->setVec3("light.direction", camera.Front);
+		lightingShader->setVec3("viewPos", camera.Position);
+		lightingShader->setFloat("light.cutOff", glm::cos(glm::radians(11.0f)));
+		lightingShader->setFloat("light.outerCutOff", glm::cos(glm::radians(18.0f)));
+		if (activateSpotLight == true)
+		{
+			lightingShader->setFloat("activateSpotlight", true);
+		}
+		else
+		{
+			lightingShader->setFloat("activateSpotlight", false);
+
+		}
+		lightingShader->setVec3("light.ambient", 0.0f, 0.0f, 0.0f);
+
+		lightingShader->setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+		lightingShader->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+		lightingShader->setFloat("light.constant", 0.1f);
+		lightingShader->setFloat("light.linear", 0.09f);
+		lightingShader->setFloat("light.quadratic", 0.0009f);
+		
+		// material properties
+		lightingShader->setFloat("material.shininess", 16.0f);
 
 		// view/projection transformations
-		PhongShader->use();
-		PhongShader->setMat4("projection", glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
-		PhongShader->setMat4("view", camera.GetViewMatrix());
-		PhongShader->setVec3("viewPos", camera.Position);
-		PhongShader->setVec3("lightPos", camera.Position);
-
-		FloorShader->use();
-		FloorShader->setMat4("projection", glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f));
-		FloorShader->setMat4("view", camera.GetViewMatrix());
-		FloorShader->setVec3("viewPos", camera.Position);
-		FloorShader->setVec3("lightPos", camera.Position);
-
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
+		lightingShader->setMat4("projection", projection);
+		lightingShader->setMat4("view", view);
 
 		// render
 		myDisplay();
@@ -305,21 +319,15 @@ void initGL(GLFWwindow** window)
 
 void setupShader()
 {
-	PhongShader = new Shader("model_loading.vs", "model_loading.fs");
-	PhongShader->use();
-
 	// Light attributes
-	PhongShader->setVec3("lightColor", lightColor);
-
-	FloorShader = new Shader("advanced_lighting.vs", "advanced_lighting.fs");
-	FloorShader->use();
-	FloorShader->setVec3("lightColor", lightColor);
+	lightingShader = new Shader("light_casters.vs", "light_casters.fs");
+	lightingShader->use();
+	lightingShader->setVec3("lightColor", lightColor);
 }
 
 void destroyShader()
 {
-	delete PhongShader;
-	delete FloorShader;
+	delete lightingShader;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -331,7 +339,7 @@ void processInput(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		RobotControl = key - GLFW_KEY_1;
 	}
-	else if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
 		if (activateParent == false) activateParent = true;
 		else activateParent = false;
 	}
@@ -344,8 +352,11 @@ void processInput(GLFWwindow* window, int key, int scancode, int action, int mod
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
-
-	else if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+		if (activateSpotLight == false) activateSpotLight = true;
+		else activateSpotLight = false;
+	}
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 }
 
@@ -365,31 +376,31 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	if (firstMouse)
 	{
-		lastX = (float) xpos;
-		lastY = (float) ypos;
+		lastX = (float)xpos;
+		lastY = (float)ypos;
 		firstMouse = false;
 	}
 
-	float xoffset = (float) (xpos - lastX) / SCR_WIDTH;
-	float yoffset = (float) (lastY - ypos) / SCR_HEIGHT; // reversed since y-coordinates go from bottom to top
+	float xoffset = (float)(xpos - lastX) / SCR_WIDTH;
+	float yoffset = (float)(lastY - ypos) / SCR_HEIGHT; // reversed since y-coordinates go from bottom to top
 
-	lastX = (float) xpos;
-	lastY = (float) ypos;
+	lastX = (float)xpos;
+	lastY = (float)ypos;
 	if (RightButtonDown)
 	{
-		camera.ProcessMouseMovement(xoffset*200, yoffset*200);
+		camera.ProcessMouseMovement(xoffset * 200, yoffset * 200);
 	}
 	if (LeftButtonDown)
 	{
 		switch (RobotControl)
 		{
 		case 0: BaseTransX += xoffset; BaseTransZ -= yoffset; break;
-		case 1: BaseSpin += xoffset * 180 ; break;
-		case 2: ShoulderAng += yoffset   * -90; ElbowAng += xoffset  * 90; break;
-		case 3: WristAng += yoffset  * -180; WristTwistAng += xoffset  * 180; break;
-		case 4: FingerAng1 += yoffset  * 90; FingerAng2 += xoffset * 180; break;
+		case 1: BaseSpin += xoffset * 180; break;
+		case 2: ShoulderAng += yoffset * -90; ElbowAng += xoffset * 90; break;
+		case 3: WristAng += yoffset * -180; WristTwistAng += xoffset * 180; break;
+		case 4: FingerAng1 += yoffset * 90; FingerAng2 += xoffset * 180; break;
 		}
-	} 
+	}
 	if (LeftButtonDown && activateParent == true)
 	{
 		switch (RobotControl)
@@ -450,7 +461,7 @@ protected:
 	unsigned int VAO = 0, vbo = 0, ebo = 0;
 	unsigned int IndexCount = 0;
 	float height = 1.0f;
-    float radius[2] = { 1.0f, 1.0f };
+	float radius[2] = { 1.0f, 1.0f };
 };
 
 class Cylinder : public Primitive {
@@ -506,9 +517,11 @@ void destroyGLPrimitives()
 
 void DrawGroundPlane(glm::mat4 model)
 {
-	FloorShader->use();
-	FloorShader->setMat4("model", model);
+	lightingShader->use();
+	lightingShader->setMat4("model", model);
+	lightingShader->setVec3("ObjColor", glm::vec3(Ground[0], Ground[1], Ground[2]));
 	groundPlane->Draw();
+
 }
 
 void DrawJoint(glm::mat4 model)
@@ -516,11 +529,12 @@ void DrawJoint(glm::mat4 model)
 	glm::mat4 Mat1 = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 0.15f, 0.12f));
 	Mat1 = glm::rotate(Mat1, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-	PhongShader->use();
+	lightingShader->use();
 	Mat1 = model * Mat1;
-	PhongShader->setMat4("model", Mat1);
-	PhongShader->setVec3("ObjColor", glm::vec3(Joints[0], Joints[1], Joints[2]));
-	PhongShader->setInt("hasTextures", false);
+	lightingShader->setMat4("model", Mat1);
+
+	lightingShader->setVec3("ObjColor", glm::vec3(Joints[0], Joints[1], Joints[2]));
+	lightingShader->setInt("hasTextures", false);
 	unitCylinder->Draw();
 }
 void DrawBase(glm::mat4 model)
@@ -528,24 +542,24 @@ void DrawBase(glm::mat4 model)
 	glm::mat4 Base = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 0.025f, 0.2f));
 	glm::mat4 InBase = glm::inverse(Base);
 
-	PhongShader->use();
+	lightingShader->use();
 	Base = model * Base;
-	PhongShader->setMat4("model", Base);
-	PhongShader->setVec3("ObjColor", glm::vec3(Joints[0], Joints[1], Joints[2]));
-	PhongShader->setInt("hasTextures", false);
+	lightingShader->setMat4("model", Base);
+	lightingShader->setVec3("ObjColor", glm::vec3(Joints[0], Joints[1], Joints[2]));
+	lightingShader->setInt("hasTextures", false);
 	unitCylinder->Draw();
 
 	glm::mat4 Mat1 = glm::translate(InBase, glm::vec3(0.0f, 0.2f, 0.0f));
 	Mat1 = glm::scale(Mat1, glm::vec3(0.1f, 0.4f, 0.1f));
 
 	Mat1 = Base * Mat1;
-	PhongShader->setMat4("model", Mat1);
-	PhongShader->setVec3("ObjColor", glm::vec3(Arms[0], Arms[1], Arms[2]));
+	lightingShader->setMat4("model", Mat1);
+	lightingShader->setVec3("ObjColor", glm::vec3(Arms[0], Arms[1], Arms[2]));
 	unitCylinder->Draw();
 
 	glm::mat4 Mat2 = glm::translate(InBase, glm::vec3(0.0f, 0.4f, 0.0f));
 	Mat2 = Base * Mat2;
-	PhongShader->setMat4("model", Mat2);
+	lightingShader->setMat4("model", Mat2);
 	DrawJoint(Mat2);
 }
 void DrawArmSegment(glm::mat4 model)
@@ -554,16 +568,16 @@ void DrawArmSegment(glm::mat4 model)
 	Base = glm::scale(Base, glm::vec3(0.1f, 0.5f, 0.1f));
 	glm::mat4 InBase = glm::inverse(Base);
 
-	PhongShader->use();
+	lightingShader->use();
 	Base = model * Base;
-	PhongShader->setMat4("model", Base);
-	PhongShader->setVec3("ObjColor", glm::vec3(Arms[0], Arms[1], Arms[2]));
-	PhongShader->setInt("hasTextures", false);
+	lightingShader->setMat4("model", Base);
+	lightingShader->setVec3("ObjColor", glm::vec3(Arms[0], Arms[1], Arms[2]));
+	lightingShader->setInt("hasTextures", false);
 	unitCylinder->Draw();
 
 	glm::mat4 Mat1 = glm::translate(InBase, glm::vec3(0.0f, 0.5f, 0.0f));;
 	Mat1 = Base * Mat1;
-	PhongShader->setMat4("model", Mat1);
+	lightingShader->setMat4("model", Mat1);
 	DrawJoint(Mat1);
 }
 void DrawWrist(glm::mat4 model)
@@ -572,20 +586,20 @@ void DrawWrist(glm::mat4 model)
 	Base = glm::scale(Base, glm::vec3(0.08f, 0.2f, 0.08f));
 	glm::mat4 InBase = glm::inverse(Base);
 
-	PhongShader->use();
+	lightingShader->use();
 	Base = model * Base;
-	PhongShader->setMat4("model", Base);
-	PhongShader->setVec3("ObjColor", glm::vec3(Fingers[0], Fingers[1], Fingers[2]));
-	PhongShader->setInt("hasTextures", false);
+	lightingShader->setMat4("model", Base);
+	lightingShader->setVec3("ObjColor", glm::vec3(Fingers[0], Fingers[1], Fingers[2]));
+	lightingShader->setInt("hasTextures", false);
 	unitCylinder->Draw();
 
 	glm::mat4 Mat1 = glm::translate(InBase, glm::vec3(0.0f, 0.2f, 0.0f));
 	Mat1 = glm::scale(Mat1, glm::vec3(0.06f, 0.06f, 0.06f));
 
 	Mat1 = Base * Mat1;
-	PhongShader->setMat4("model", Mat1);
-	PhongShader->setVec3("ObjColor", glm::vec3(FingerJoints[0], FingerJoints[1], FingerJoints[2]));
-	unitSphere->Draw(); 
+	lightingShader->setMat4("model", Mat1);
+	lightingShader->setVec3("ObjColor", glm::vec3(FingerJoints[0], FingerJoints[1], FingerJoints[2]));
+	unitSphere->Draw();
 }
 void DrawFingerBase(glm::mat4 model)
 {
@@ -593,19 +607,19 @@ void DrawFingerBase(glm::mat4 model)
 	Base = glm::scale(Base, glm::vec3(0.05f, 0.3f, 0.05f));
 	glm::mat4 InBase = glm::inverse(Base);
 
-	PhongShader->use();
+	lightingShader->use();
 	Base = model * Base;
-	PhongShader->setMat4("model", Base);
-	PhongShader->setVec3("ObjColor", glm::vec3(Fingers[0], Fingers[1], Fingers[2]));
-	PhongShader->setInt("hasTextures", false);
+	lightingShader->setMat4("model", Base);
+	lightingShader->setVec3("ObjColor", glm::vec3(Fingers[0], Fingers[1], Fingers[2]));
+	lightingShader->setInt("hasTextures", false);
 	unitCylinder->Draw();
 
 	glm::mat4 Mat1 = glm::translate(InBase, glm::vec3(0.0f, 0.35f, 0.0f));
 	Mat1 = glm::scale(Mat1, glm::vec3(0.05f, 0.05f, 0.05f));
 
 	Mat1 = Base * Mat1;
-	PhongShader->setMat4("model", Mat1);
-	PhongShader->setVec3("ObjColor", glm::vec3(FingerJoints[0], FingerJoints[1], FingerJoints[2]));
+	lightingShader->setMat4("model", Mat1);
+	lightingShader->setVec3("ObjColor", glm::vec3(FingerJoints[0], FingerJoints[1], FingerJoints[2]));
 	unitSphere->Draw();
 }
 void DrawFingerTip(glm::mat4 model)
@@ -613,21 +627,21 @@ void DrawFingerTip(glm::mat4 model)
 	glm::mat4 Base = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f, 0.25f, 0.05f));
 	Base = glm::translate(Base, glm::vec3(0.0f, 0.4f, 0.0f));
 
-	PhongShader->use();
+	lightingShader->use();
 	Base = model * Base;
-	PhongShader->setMat4("model", Base);
-	PhongShader->setVec3("ObjColor", glm::vec3(Fingers[0], Fingers[1], Fingers[2]));
-	PhongShader->setInt("hasTextures", false);
+	lightingShader->setMat4("model", Base);
+	lightingShader->setVec3("ObjColor", glm::vec3(Fingers[0], Fingers[1], Fingers[2]));
+	lightingShader->setInt("hasTextures", false);
 	unitCone->Draw();
 }
 
 void DrawObject(glm::mat4 model)
 {
-	PhongShader->use();
-	PhongShader->setMat4("model", model);
-	PhongShader->setVec3("ObjColor", glm::vec3(1.0f, 1.0f, 0.0f));
-	PhongShader->setInt("hasTextures", hasTextures);
-	ourObjectModel->Draw(*PhongShader);
+	lightingShader->use();
+	lightingShader->setMat4("model", model);
+	lightingShader->setVec3("ObjColor", glm::vec3(1.0f, 1.0f, 0.0f));
+	lightingShader->setInt("hasTextures", hasTextures);
+	ourObjectModel->Draw(*lightingShader);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -698,7 +712,7 @@ Sphere::Sphere(int NumSegs)
 			data.push_back(normals[i].z);
 		}
 	}
-	
+
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
@@ -764,7 +778,7 @@ Plane::Plane()
 	};
 	unsigned int indices[] = { 0, 1, 3, 2 };
 
-	IndexCount = sizeof(indices)/sizeof(unsigned int);
+	IndexCount = sizeof(indices) / sizeof(unsigned int);
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -787,8 +801,8 @@ Plane::Plane()
 	glBindVertexArray(0);
 
 	floorTexture = loadTexture("./wood.png");
-	FloorShader->use();
-	FloorShader->setInt("texture1", floorTexture);
+	lightingShader->use();
+	lightingShader->setInt("texture1", floorTexture);
 
 }
 
